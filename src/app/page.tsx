@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
-import { LineChart } from "@/components/visualizations/line-chart";
+import { LineChart } from "@/components/visualizations/re-charts/line-chart";
 import { useQuery } from "@tanstack/react-query";
 import { getData } from "@/lib/api/requests";
 import { ChartDashboard } from "@/components/chart-dashboard";

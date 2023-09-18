@@ -16,7 +16,7 @@ export type PlotConfigurations = {
 
 export type PlotTitle = string;
 
-type D3LineChartProps = {
+type ChartProps = {
 	plots: Record<PlotTitle, PlotConfigurations>;
 	chartTitle?: string;
 	xTitle?: string;
@@ -41,7 +41,7 @@ const colors = [
 // const textColors = colors.map((c) => `text-${c}`);
 // const borderColors = colors.map((c) => `border-${c}`);
 
-export const D3LineChart: React.FC<D3LineChartProps> = ({
+export const Chart: React.FC<ChartProps> = ({
 	plots,
 	chartTitle,
 	xTitle,
@@ -50,7 +50,7 @@ export const D3LineChart: React.FC<D3LineChartProps> = ({
 	const [ref, bounds] = useMeasure();
 
 	return (
-		<div ref={ref} className="relative h-full grow">
+		<div ref={ref} className="relative h-full w-full">
 			{bounds.width > 0 && (
 				<ChartInner
 					plots={plots}
@@ -108,12 +108,12 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 		bottom: 60,
 	};
 
-	const xScale = d3
+	const xScaleLinear = d3
 		.scaleLinear()
 		.domain([d3.min(x) ?? 0, d3.max(x) ?? 10])
 		.range([margin.left, width - margin.right]);
 
-	const yScale = d3
+	const yScaleLinear = d3
 		.scaleLinear()
 		.domain([d3.min(y) ?? 0, d3.max(y) ?? 10])
 		.range([height - margin.bottom, margin.top]);
@@ -122,8 +122,8 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 
 	const line = d3
 		.line()
-		.x((d) => xScale(d[0]))
-		.y((d) => yScale(d[1]))
+		.x((d) => xScaleLinear(d[0]))
+		.y((d) => yScaleLinear(d[1]))
 		.curve(d3.curveMonotoneX);
 
 	const lines = Object.values(data).map((d, i) => {
@@ -150,7 +150,7 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 					className="text-[24px]"
 					fill="currentColor"
 					transform={`translate(${
-						xScale((d3.max(x) ?? 10 - (d3.min(x) ?? 10)) / 2) -
+						xScaleLinear((d3.max(x) ?? 10 - (d3.min(x) ?? 10)) / 2) -
 						chartTitleBounds.width / 2
 					}, ${chartTitleBounds.height})`}
 				>
@@ -165,7 +165,9 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 					textAnchor="middle"
 					transform={`translate(${
 						margin.left - yAxisTitleBounds.height / 2 - 5
-					}, ${yScale((d3.max(y) ?? 10 - (d3.min(y) ?? 10)) / 2)}) rotate(-90)`}
+					}, ${yScaleLinear(
+						(d3.max(y) ?? 10 - (d3.min(y) ?? 10)) / 2
+					)}) rotate(-90)`}
 					fill="currentColor"
 				>
 					{yTitle}
@@ -178,7 +180,7 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 					alignmentBaseline="middle"
 					textAnchor="middle"
 					fill="currentColor"
-					transform={`translate(${xScale(
+					transform={`translate(${xScaleLinear(
 						(d3.max(x) ?? 10 - (d3.min(x) ?? 10)) / 2
 					)}, ${height - xAxisTitleBounds.height})`}
 				>
@@ -186,9 +188,9 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 				</text>
 
 				{/* Y Scale */}
-				{yScale.ticks(5).map((max) => (
+				{yScaleLinear.ticks(5).map((max) => (
 					<g
-						transform={`translate(0,${yScale(max)})`}
+						transform={`translate(0,${yScaleLinear(max)})`}
 						key={max}
 						className="text-foreground"
 					>
@@ -215,9 +217,9 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 				))}
 
 				{/* Y Axis */}
-				<g transform={`translate(${xScale(0)},${height})`}>
+				<g transform={`translate(${xScaleLinear(0)},${height})`}>
 					<line
-						y1={-height + yScale(0)}
+						y1={-height + yScaleLinear(0)}
 						y2={-height + margin.top}
 						stroke="currentColor"
 						className="text-foreground"
@@ -225,11 +227,11 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 				</g>
 
 				{/* X Scale */}
-				{xScale.ticks(5).map((max) => {
+				{xScaleLinear.ticks(5).map((max) => {
 					if (max === 0) return;
 					return (
 						<g
-							transform={`translate(${xScale(max)},${height})`}
+							transform={`translate(${xScaleLinear(max)},${height})`}
 							key={max}
 							className="text-accent"
 						>
@@ -237,7 +239,7 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 								strokeDasharray="2,3"
 								// y1={margin.top}
 								// y2={margin.top - margin.bottom - height}
-								y1={-height + yScale(0)}
+								y1={-height + yScaleLinear(0)}
 								y2={-height + margin.top}
 								alignmentBaseline="middle"
 								stroke="currentColor"
@@ -246,7 +248,7 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 							<text
 								ref={xAxisLabelRef}
 								transform={`translate(0, ${
-									yScale(0) - height + xAxisLabelBounds.height / 2 + 5
+									yScaleLinear(0) - height + xAxisLabelBounds.height / 2 + 5
 								})`}
 								fill="currentColor"
 								className="text-[12px] text-foreground"
@@ -261,10 +263,10 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 
 				{/* X Axis */}
 				<line
-					x1={xScale(0)}
-					x2={xScale(d3.max(x) ?? 10)}
-					y1={yScale(0)}
-					y2={yScale(0)}
+					x1={xScaleLinear(0)}
+					x2={xScaleLinear(d3.max(x) ?? 10)}
+					y1={yScaleLinear(0)}
+					y2={yScaleLinear(0)}
 					stroke="currentColor"
 					className="text-foreground"
 				/>
@@ -302,8 +304,8 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 							fill="currentColor"
 							key={d[0]}
 							r="5"
-							cx={xScale(d[0])}
-							cy={yScale(d[1])}
+							cx={xScaleLinear(d[0])}
+							cy={yScaleLinear(d[1])}
 						/>
 					));
 				})}
@@ -318,14 +320,14 @@ const ChartInner: React.FC<ChartInnerProps> = ({
 				)}
 				style={{
 					left:
-						xScale(hoveredData[0] ?? 0) + 10 + tooltipBounds.width >
+						xScaleLinear(hoveredData[0] ?? 0) + 10 + tooltipBounds.width >
 						chartBounds.width
 							? chartBounds.width - tooltipBounds.width - 10 - margin.right
-							: xScale(hoveredData[0] ?? 0) + 10,
+							: xScaleLinear(hoveredData[0] ?? 0) + 10,
 					top:
-						yScale(hoveredData[1] ?? 0) - tooltipBounds.height > 0
-							? yScale(hoveredData[1] ?? 0) - tooltipBounds.height
-							: yScale(hoveredData[1] ?? 0),
+						yScaleLinear(hoveredData[1] ?? 0) - tooltipBounds.height > 0
+							? yScaleLinear(hoveredData[1] ?? 0) - tooltipBounds.height
+							: yScaleLinear(hoveredData[1] ?? 0),
 				}}
 			>
 				<span className="text-foreground">x: {hoveredData[0].toFixed(2)}</span>

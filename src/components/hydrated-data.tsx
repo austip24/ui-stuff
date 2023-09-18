@@ -1,4 +1,4 @@
-import { getData, getHaulageData } from "@/lib/api/requests";
+import { getData } from "@/lib/api/requests";
 import getQueryClient from "@/lib/get-query-client";
 import { Hydrate, dehydrate } from "@tanstack/react-query";
 
